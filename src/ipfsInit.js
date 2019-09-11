@@ -11,15 +11,18 @@ exports.ipfsInit = async (swarmUrlOption)=>{
   const swarmUrl = swarmUrlOption == 'public'? '/dns4/ws-star.discovery.libp2p.io/tcp/443/wss/p2p-websocket-star': swarmUrlOption;
   
   console.log('swarmUrl:|', swarmUrl, '|');
+  
   const ipfs = await IPFS.create({
-    repo: 'ipfs-leo/poc/' + Math.random(),
+    repo: 'ipfs-storage-no-git/poc/' + Math.random(),
     EXPERIMENTAL: {
       pubsub: true
     },
     config: {
       Addresses: {
         Swarm: [
-          swarmUrl
+          //'/dns4/ws-star.discovery.libp2p.io/tcp/443/wss/p2p-websocket-star'
+          //'/ip4/127.0.0.1/tcp/9090/ws/p2p-websocket-star'
+          swarmUrl.trim()
         ]
       }
     }
@@ -35,9 +38,13 @@ exports.ipfsInit = async (swarmUrlOption)=>{
   return ipfs;
 }
 
-exports.pubsubInit = async (ipfs, roomNamePostfix, rpcEvent, broadcastEvent)=>{
+exports.pubsubInit = (ipfs, roomNamePostfix, rpcEvent, broadcastEvent)=>{
+  const testRoom = Room(ipfs, 'testRoom');
+  testRoom.on('peer joined', (m)=>console.log('testRoom peer joined received,', m));
+  testRoom.on('subscribed', m=>o('log', 'testRoom subscribed', m));
   const townHall = Room(ipfs, "townHall" + roomNamePostfix);
-  townHall.on('peer joined', townHallHandler.peerJoined);
+  townHall.on('peer joined', (m)=>console.log('peer joined received,', m));
+  //townHall.on('peer joined', townHallHandler.peerJoined);
   townHall.on('peer left', townHallHandler.peerLeft);
   townHall.on('subscribed', townHallHandler.subscribed);
   townHall.on('rpcDirect', townHallHandler.rpcDirect);

@@ -9,12 +9,37 @@ import {computeTask} from 'leo.simulator.shared';
 const {computeTaskOwnerConfirmationDone, sendComputeTaskRaDone} = computeTask;
 
 exports.peerJoined = (peer)=>{
-  global.allPeers.push(peer);
-  console.log(`peer ${peer} joined`)
+  console.log('peer join event');
+  if(typeof global.allPeers[peer] == 'undefined'){
+      
+    global.rpcEvent.emit('rpcResponseWithNewRequest', {
+      sendToPeerId:peer,
+      message:JSON.stringify({type:'ping', userInfo:global.userInfo}),
+      responseCallBack:(res, err)=>{
+        if(err){
+          o('error', 'Ping another peer got err:', err);
+        }
+        else{
+          const {type, userInfo} = res;
+          console.assert(type == 'pong');
+          o('debug', `I receive a pong from peer ${peer}, userInfo added to my peer list,`, userInfo)
+            
+          global.allPeers[peer] = userInfo;
+        }
+      }
+    });
+    console.log(`peer ${peer} joined. userInfo request sent`)
+  }
+  else
+    console.log(`peer ${peer} joined. I have him into peer list`);
 };
 exports.peerLeft = (peer)=>{
-  global.allPeers = global.allPeers.filter((item)=>item != peer);
-  console.log(`peer ${peer} left`);
+  if(global.allPeers[peer]){
+    console.log(`peer ${peer} left. His userinfo:`, global.allPeers[peer].userInfo);
+    delete global.allPeers[peer];
+  }
+  else
+    console.log(`peer ${peer} left`);
 };
 exports.subscribed = (m)=>console.log(`Subscribed ${m}`);
 const updateLog = ()=>{};
@@ -59,6 +84,39 @@ exports.rpcResponse =  (room)=>(args)=>{
   room.rpcResponse(sendToPeerId, message, guid, err);
 }
 const rpcDirectHandler = {
+  ping: ({from, guid})=>{
+    o('debug', `I receive another peer ${peer} ping. I response my userInfo`);
+    const resMessage = {
+      type:'pong',
+      userInfo:global.userInfo
+    };
+    global.rpcEvent.emit('rpcResponse', {
+      sendToPeerId: from,
+      message: JSON.stringify(resMessage),
+      guid
+    });
+    
+    if(! global.allPeers[peer]){
+      o('debug', `this user is not in my peer list. after pong my user info, I am requesting him a ping for his userinfo`);
+      global.rpcEvent.emit('rpcRequest', {
+        sendToPeerId: from,
+        message: JSON.stringify({type:'ping'}),
+        responseCallBack:(res, err)=>{
+          if(err){
+            o('error', 'Ping another peer got err:', err);
+          }
+          else{
+            const {type, userInfo} = res;
+            console.assert(type == 'pong');
+            o('debug', `I receive a pong from peer ${peer}, userInfo added to my peer list,`, userInfo)
+            
+            global.allPeers[peer] = userInfo;
+          }
+        }
+      });
+    }
+    
+  },
   reqUserInfo: ({from, guid})=>{
     const resMessage = {
       type:'requestRandomUserInfo',
@@ -432,7 +490,7 @@ exports.messageHandler = (message)=>{
       break;
     }
     default:
-      o('debug', 'unhandled townhall message', message);
+      o('debug', 'unhandled townhall message', command);
   }
 
 }
