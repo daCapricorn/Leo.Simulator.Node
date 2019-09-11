@@ -8,8 +8,14 @@ const {ComputeTaskRoles} = constValue;
 import {computeTask} from 'leo.simulator.shared';
 const {computeTaskOwnerConfirmationDone, sendComputeTaskRaDone} = computeTask;
 
-exports.peerJoined = (peer)=>console.log(`peer ${peer} joined`);
-exports.peerLeft = (peer)=>console.log(`peer ${peer} left`);
+exports.peerJoined = (peer)=>{
+  global.allPeers.push(peer);
+  console.log(`peer ${peer} joined`)
+};
+exports.peerLeft = (peer)=>{
+  global.allPeers = global.allPeers.filter((item)=>item != peer);
+  console.log(`peer ${peer} left`);
+};
 exports.subscribed = (m)=>console.log(`Subscribed ${m}`);
 const updateLog = ()=>{};
 
@@ -415,11 +421,19 @@ exports.messageHandler = (message)=>{
     o('debug', 'unhandled townhall message', message);
     return;
   }
-  if(command.txType == 'debug_showPeerMgr'){
-    global.nodeSimCache.computeTaskPeersMgr.debugOutput();
+  switch(command.txType){
+    case 'debug_showPeerMgr':{
+      global.nodeSimCache.computeTaskPeersMgr.debugOutput();
+      break;
+
+    }
+    case 'debug_rpcAllPeers':{
+      console.log('global.allPeers:', global.allPeers);
+      break;
+    }
+    default:
+      o('debug', 'unhandled townhall message', message);
   }
-  else{
-    o('debug', 'unhandled townhall message', message);
-  }
+
 }
 

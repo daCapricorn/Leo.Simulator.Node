@@ -60,6 +60,7 @@ const startApp = async ()=>{
     global.nodeSimCache = {
       computeTaskPeersMgr: new ComputeTaskPeersMgr(ipfs)
     };
+    global.allPeers = [];
     return pubsubInit(ipfs, OPTIONS.randRoomPostfix, global.rpcEvent, global.broadcastEvent);
   })
   .then(({townHall, taskRoom, blockRoom})=>{
