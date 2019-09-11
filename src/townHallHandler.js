@@ -1,7 +1,6 @@
 
 import {utilities} from 'leo.simulator.shared';
 const {o, tryParseJson} = utilities;
-
 import {remoteAttestation}  from 'leo.simulator.shared';
 const {validateRemoteAttestationVrf} = remoteAttestation;
 import {constValue} from 'leo.simulator.shared';
@@ -47,15 +46,12 @@ exports.rpcRequest = (room)=>(args)=>{
   // message:JSON.stringify(raReqObj), 
   // responseCallBack:handleRaResponse
   room.rpcRequest(sendToPeerId, message, responseCallBack);
-
 }
-
 exports.rpcResponse =  (room)=>(args)=>{
   const {sendToPeerId, message, guid, err} = args;
   //o('debug', 'inside exports.rpcResponse:', sendToPeerId, message, guid, err);
   room.rpcResponse(sendToPeerId, message, guid, err);
 }
-
 const rpcDirectHandler = {
   reqUserInfo: ({from, guid})=>{
     const resMessage = {

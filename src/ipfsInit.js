@@ -25,13 +25,13 @@ exports.ipfsInit = async (swarmUrlOption)=>{
     }
   });
   console.log('IPFS node is ready');
-  // ipfs.on('error', error=>{
-  //   o('log', 'IPFS on error:', error);
-  // });
+  ipfs.on('error', error=>{
+    o('log', 'IPFS on error:', error);
+  });
 
-  // ipfs.on('init', error=>{
-  //   o('log', 'IPFS on init:', error);
-  // });
+  ipfs.on('init', error=>{
+    o('log', 'IPFS on init:', error);
+  });
   return ipfs;
 }
 
@@ -48,6 +48,7 @@ exports.pubsubInit = async (ipfs, roomNamePostfix, rpcEvent, broadcastEvent)=>{
   taskRoom.on('subscribed', m=>o('log', 'subscribed', m));
   
   const blockRoom = Room(ipfs, 'blockRoom' + roomNamePostfix);
+  blockRoom.on('subscribed', m=>o('log', 'subscribed', m));
   blockRoom.on('message', blockRoomHandler.messageHandler(ipfs))
 
   rpcEvent.on("rpcRequest", townHallHandler.rpcRequest(townHall));
