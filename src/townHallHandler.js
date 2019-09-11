@@ -469,7 +469,6 @@ const rpcDirectHandler = {
     else{
       o('error', 'I should be the task owner to receive reqComputeCompleted reqeust, but I am not. Something must be wrong');
     }
-    
   }
 }
 
@@ -483,15 +482,19 @@ exports.messageHandler = (message)=>{
     case 'debug_showPeerMgr':{
       global.nodeSimCache.computeTaskPeersMgr.debugOutput();
       break;
-
     }
     case 'debug_rpcAllPeers':{
-      console.log('global.allPeers:', global.allPeers);
+      global.ipfs.swarm.peers((err, peersAddresses) => {
+        if (err) {
+          callback(err)
+          return // early
+        }
+        console.log('From debug_rpcAllPeers display my peersAddress:', peersAddresses);
+      });
       break;
     }
     default:
       o('debug', 'unhandled townhall message', command);
   }
-
 }
 
