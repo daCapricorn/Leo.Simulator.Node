@@ -1,7 +1,6 @@
 
 import {utilities} from 'leo.simulator.shared';
-const {o, tryParseJson} = utilities;
-
+import o from './logWebUi';
 import {computeTask, constValue} from 'leo.simulator.shared';
 const {executeCompute} = computeTask;
 import diff from 'hyperdiff';

@@ -1,7 +1,6 @@
 
-import {utilities} from 'leo.simulator.shared';
-const {o, tryParseJson} = utilities;
 
+import o from './logWebUi';
 import {constValue} from 'leo.simulator.shared';
 const {expectNumberOfRemoteAttestatorsToBeVoted, minimalNewNodeJoinRaDeposit, 
   expectNumberOfExecutorGroupToBeVoted, ComputeTaskRole} = constValue;

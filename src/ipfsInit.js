@@ -1,7 +1,6 @@
 import IPFS  from 'ipfs';
 import Room from 'ipfs-pubsub-room';
-import {utilities} from 'leo.simulator.shared';
-const {o} = utilities;
+import o from './logWebUi';
 import townHallHandler from './townHallHandler';
 import blockRoomHandler from './blockRoomHandler';
 
@@ -70,5 +69,6 @@ exports.pubsubInit = (ipfs, roomNamePostfix, rpcEvent, broadcastEvent)=>{
     broadcastEvent.on('taskRoom', (m)=>taskRoom.broadcast(m));
     broadcastEvent.on('blockRoom', (m)=>blockRoom.broadcast(m));  
   }
+
   return {townHall, taskRoom, blockRoom}
 }

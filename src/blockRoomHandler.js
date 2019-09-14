@@ -1,6 +1,7 @@
 
 import {utilities} from 'leo.simulator.shared';
-const {o, tryParseJson} = utilities;
+const {tryParseJson} = utilities;
+import o from './logWebUi'
 
 exports.messageHandler = (ipfs)=>async (message)=>{
   const blockObj = tryParseJson(message.data);

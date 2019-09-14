@@ -2,9 +2,7 @@ import autoBind from 'auto-bind';
 
 import {constValue} from 'leo.simulator.shared';
 const {ComputeTaskRoles, expectNumberOfExecutorGroupToBeVoted} = constValue;
-
-import {utilities} from 'leo.simulator.shared';
-const {o} = utilities;
+import o from './logWebUi';
 
 import Big from 'big.js';
 import {sha256} from 'js-sha256';

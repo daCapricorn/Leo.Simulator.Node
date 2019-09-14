@@ -50,9 +50,17 @@ exports.startApp = async (OPTIONS)=>{
       computeTaskPeersMgr: new ComputeTaskPeersMgr(ipfs)
     };
     global.allPeers = {};
-    return pubsubInit(ipfs, OPTIONS.randRoomPostfix, global.rpcEvent, global.broadcastEvent);
+    
+    return pubsubInit(ipfs, OPTIONS.randRoomPostfix, global.rpcEvent, global.broadcastEvent,  global.logEvent);
   })
-  .then(()=>{
+  .then(({townHall})=>{
+    global.log = (type, content)=>{
+      if(! global.webUiPeerId){
+        return;
+      }
+      townHall.sendTo(global.webUiPeerId, JSON.stringify({type, content}));
+      
+    }
     console.log('pubsubInit done');
   })
   .catch(err=>{

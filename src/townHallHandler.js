@@ -1,6 +1,7 @@
 
 import {utilities} from 'leo.simulator.shared';
-const {o, tryParseJson} = utilities;
+const { tryParseJson} = utilities;
+import o from './logWebUi';
 import {remoteAttestation}  from 'leo.simulator.shared';
 const {validateRemoteAttestationVrf} = remoteAttestation;
 import {constValue} from 'leo.simulator.shared';
@@ -194,6 +195,7 @@ const rpcDirectHandler = {
       await global.nodeSimCache.computeTaskPeersMgr.assignSpecialRoleToTask(cid, global.userInfo.userName);
     }
     global.broadcastEvent.emit('taskRoom', JSON.stringify({txType, cid}));
+    o('status', `Tx ${txType} sent.`)
     global.rpcEvent.emit('rpcResponse', {
       sendToPeerId: from, 
       message : JSON.stringify({result:"OK"}), 
