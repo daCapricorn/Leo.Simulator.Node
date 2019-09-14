@@ -8,8 +8,40 @@ const {ComputeTaskRoles} = constValue;
 import {computeTask} from 'leo.simulator.shared';
 const {computeTaskOwnerConfirmationDone, sendComputeTaskRaDone} = computeTask;
 
-exports.peerJoined = (peer)=>console.log(`peer ${peer} joined`);
-exports.peerLeft = (peer)=>console.log(`peer ${peer} left`);
+exports.peerJoined = (peer)=>{
+  console.log(`peer ${peer} joined`);
+  // console.log('peer join event');
+  // if(typeof global.allPeers[peer] == 'undefined'){
+      
+  //   global.rpcEvent.emit('rpcRequest', {
+  //     sendToPeerId:peer,
+  //     message:JSON.stringify({type:'ping', userInfo:global.userInfo}),
+  //     responseCallBack:(res, err)=>{
+  //       if(err){
+  //         o('error', 'Ping another peer got err:', err);
+  //       }
+  //       else{
+  //         const {type, userInfo} = res;
+  //         console.assert(type == 'pong');
+  //         o('debug', `I receive a pong from peer ${peer}, userInfo added to my peer list,`, userInfo)
+            
+  //         global.allPeers[peer] = userInfo;
+  //       }
+  //     }
+  //   });
+  //   console.log(`peer ${peer} joined. userInfo request sent`)
+  // }
+  // else
+  //   console.log(`peer ${peer} joined. I have him into peer list`);
+};
+exports.peerLeft = (peer)=>{
+  // if(global.allPeers[peer]){
+  //   console.log(`peer ${peer} left. His userinfo:`, global.allPeers[peer].userInfo);
+  //   delete global.allPeers[peer];
+  // }
+  // else
+    console.log(`peer ${peer} left`);
+};
 exports.subscribed = (m)=>console.log(`Subscribed ${m}`);
 const updateLog = ()=>{};
 
@@ -53,6 +85,48 @@ exports.rpcResponse =  (room)=>(args)=>{
   room.rpcResponse(sendToPeerId, message, guid, err);
 }
 const rpcDirectHandler = {
+  ping: ({from, guid})=>{
+    o('debug', `I receive another peer ${from} ping. I response my userInfo`);
+    const resMessage = {
+      type:'pong',
+      userInfo:global.userInfo? global.userInfo: {peerId:global.ipfs._peerInfo.id.toB58String()}
+    };
+    global.rpcEvent.emit('rpcResponse', {
+      sendToPeerId: from,
+      message: JSON.stringify(resMessage),
+      guid
+    });
+    
+    if(! global.allPeers[from]){
+      o('debug', `this user is not in my peer list. after pong my user info, I am requesting him a ping for his userinfo`);
+      global.rpcEvent.emit('rpcRequest', {
+        sendToPeerId: from,
+        message: JSON.stringify({type:'ping'}),
+        responseCallBack:(res, err)=>{
+          if(err){
+            o('error', 'Ping another peer got err:', err);
+          }
+          else{
+            const {type, userInfo, specialRole} = res;
+            console.assert(type == 'pong');
+            o('debug', `I receive a pong from peer ${from}, userInfo added to my peer list,`, userInfo)
+            if(userInfo)
+              global.allPeers[from] = userInfo;
+            else if(specialRole == 'WebUi'){
+              global.webUiPeerId = from;
+              global.allPeers[from] = {specialRole};
+
+            }
+            else if(specialRole == 'LayerOneBlockChain'){
+              global.allPeers[from] = {specialRole};
+
+            }
+          }
+        }
+      });
+    }
+    
+  },
   reqUserInfo: ({from, guid})=>{
     const resMessage = {
       type:'requestRandomUserInfo',
@@ -118,7 +192,7 @@ const rpcDirectHandler = {
   },
   reqRemoteAttestation: async ({from, guid, messageObj})=>{//Now I am new node, sending back poT after validate the remote attestation is real
     const { j, proof, value, taskCid, publicKey, userName, blockHeightWhenVRF} = messageObj;
-    const validateReturn = await validateRemoteAttestationVrf({ipfs, j, proof, value, blockCid:global.blockMgr.getBlockCidByHeight(blockHeightWhenVRF), taskCid, publicKey, userName});
+    const validateReturn = await validateRemoteAttestationVrf({j, proof, value, blockCid:global.blockMgr.getBlockCidByHeight(blockHeightWhenVRF), taskCid, publicKey, userName});
 
     if(! validateReturn.result){
       o('log', `VRF Validation failed, reason is `, validateReturn.reason);
@@ -373,7 +447,6 @@ const rpcDirectHandler = {
       }
     }
     handleReqVerifyPeerReRunable(messageObj);
-
   },
 
   reqComputeCompleted: ({from, guid, messageObj})=>{
@@ -405,7 +478,6 @@ const rpcDirectHandler = {
     else{
       o('error', 'I should be the task owner to receive reqComputeCompleted reqeust, but I am not. Something must be wrong');
     }
-    
   }
 }
 
@@ -415,11 +487,24 @@ exports.messageHandler = (message)=>{
     o('debug', 'unhandled townhall message', message);
     return;
   }
-  if(command.txType == 'debug_showPeerMgr'){
-    global.nodeSimCache.computeTaskPeersMgr.debugOutput();
-  }
-  else{
-    o('debug', 'unhandled townhall message', message);
+  switch(command.txType){
+    case 'debug_showPeerMgr':{
+      global.nodeSimCache.computeTaskPeersMgr.debugOutput();
+      break;
+    }
+    // case 'debug_rpcAllPeers':{
+    //   global.ipfs.swarm.peers((err, peersAddresses) => {
+    //     if (err) {
+    //       callback(err)
+    //       return // early
+    //     }
+    //     console.log('From debug_rpcAllPeers display my peersAddress:', peersAddresses.map(p=>p.peer._idB58String));
+    //     console.log('My peerId is,', global.ipfs._peerInfo.id.toB58String());
+    //   });
+    //   break;
+    // }
+    default:
+      o('debug', 'unhandled townhall message', command);
   }
 }
 

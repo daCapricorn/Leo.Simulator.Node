@@ -79,6 +79,8 @@ node_modules
 # IPFS Storage #
 #################
 ipfs-leo
+ipfs-storage-no-git
+
 # reify cach #
 #################
 .reify-cache

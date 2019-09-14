@@ -5,7 +5,7 @@
   "author": "Kevin G Zhang",
   "license": "Apache 2.0",
   "scripts": {
-    "start": "node --require @babel/register ./src",
+    "start": "nodemon --require @babel/register ./src",
     "dev": "nodemon --require @babel/register ./src",
     "debug": "node --inspect=127.0.0.1:9239 --require @babel/register ./src",
     "test": "mocha --timeout 15000 --exit --require @babel/register --require reify"
@@ -15,6 +15,7 @@
     "url": "https://github.com/elastos/Leo.Simulator.Node"
   },
   "dependencies": {
+    "@babel/polyfill": "^7.6.0",
     "@babel/preset-env": "^7.5.5",
     "@babel/register": "^7.0.0",
     "@babel/runtime": "^7.5.5",
