@@ -109,13 +109,14 @@ const rpcDirectHandler = {
           else{
             const {type, userInfo, specialRole} = res;
             console.assert(type == 'pong');
-            o('debug', `I receive a pong from peer ${from}, userInfo added to my peer list,`, userInfo)
-            if(userInfo)
+            if(userInfo){
               global.allPeers[from] = userInfo;
+              o('debug', `I receive a pong from peer ${from}, userInfo added to my peer list,`, userInfo);
+            } 
             else if(specialRole == 'WebUi'){
               global.webUiPeerId = from;
               global.allPeers[from] = {specialRole};
-
+              o('debug', `I receive a pong from peer ${from}, He has a special role,`, specialRole);           
             }
             else if(specialRole == 'LayerOneBlockChain'){
               global.allPeers[from] = {specialRole};
@@ -148,6 +149,16 @@ const rpcDirectHandler = {
             peerId:global.ipfs._peerInfo.id.toB58String()
           };
           console.log("User info confirmed:", global.userInfo);
+
+          if(global.webUiPeerId){
+            global.rpcEvent.emit('rpcRequest', {
+              sendToPeerId: global.webUiPeerId,
+              message: JSON.stringify({type:'updateNodeUserInfo', userInfo}),
+              responseCallBack:(res, err)=>{
+                if(err) o('error', 'Send updateNodeUserInfo to WebUi, but got err response,', err);
+              }
+            })
+          }
         }
 
       }
