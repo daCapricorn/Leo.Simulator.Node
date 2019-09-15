@@ -470,7 +470,7 @@ const rpcDirectHandler = {
         message : JSON.stringify({feedback:"Great Job!"}), 
         guid
       });
-      o('debug', `I am task Owner. I response executor's request back Great Job`);
+      o('status', `I am task Owner. I response executor's request back Great Job`);
       computeTaskOwnerConfirmationDone(taskCid);
       o('debug', 'done: computeTaskOwnerConfirmationDone');
     }
@@ -483,7 +483,7 @@ const rpcDirectHandler = {
           message : JSON.stringify({feedback:"Great Job!"}), 
           guid
         });
-        o('debug', `I am monitor. I response executor's request back Great Job`);
+        o('status', `I am monitor. I response executor's request back Great Job`);
       
         sendComputeTaskRaDone(taskCid);
       }

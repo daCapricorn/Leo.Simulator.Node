@@ -122,6 +122,7 @@ exports.handleProccessedTxs = async ({height})=>{
     const vrfResult = ComputeTaskPeersMgr.tryVrfForComputeTask(block, cid, userInfo);
     if(vrfResult.result){
       o('log', `I am lucky!! J is ${vrfResult.j}. However I should not tell anyone about my win. Do not want to get hacker noticed. I just join the secure p2p chat group for winner's only`);
+      o('status', `I won VRF of compute task. J value is ${vrfResult.j}`);
       const applicationJoinSecGroup = {
         txType:'computeTaskWinnerApplication',
         ipfsPeerId: global.ipfs._peerInfo.id.toB58String(),//peerId for myself
@@ -142,6 +143,7 @@ exports.handleProccessedTxs = async ({height})=>{
       //   cid,
       // })
       o('log', `bad luck, try next time`);
+
     }
     
   });
@@ -185,6 +187,7 @@ const handleNewNodeJoinNeedRaTxs = ({block, blockCid, totalCreditForOnlineNodes,
   const j = sortition.getVotes(value, new Big(myCurrentCreditBalance), new Big(p));
   if(j.gt(0)){
     console.log("I am lucky!!! J:", j.toFixed());
+    o('status', `I won VRF of New Node Join RA. J value is ${$j.toFixed()}`);
     const raReqObj = {
       type:'reqRemoteAttestation',
       j:parseInt(j.toFixed()), 
