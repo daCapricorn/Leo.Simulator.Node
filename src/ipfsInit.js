@@ -3,6 +3,8 @@ import Room from 'ipfs-pubsub-room';
 import o from './logWebUi';
 import townHallHandler from './townHallHandler';
 import blockRoomHandler from './blockRoomHandler';
+import rpcResponse from './rpcResponse';
+import rpcDirectHandler from './rpcDirectHandler';
 
 exports.ipfsInit = async (swarmUrlOption)=>{
   console.log('swarmUrlOption:|', swarmUrlOption, '|');
@@ -43,7 +45,8 @@ exports.pubsubInit = (ipfs, roomNamePostfix, rpcEvent, broadcastEvent)=>{
   townHall.on('peer joined', townHallHandler.peerJoined);
   townHall.on('peer left', townHallHandler.peerLeft);
   townHall.on('subscribed', townHallHandler.subscribed);
-  townHall.on('rpcDirect', townHallHandler.rpcDirect);
+  //townHall.on('rpcDirect', townHallHandler.rpcDirect);
+  townHall.on('rpcDirect', rpcResponse(rpcDirectHandler));
   townHall.on('message', townHallHandler.messageHandler);
   townHall.on('error', (err)=>o('error', `*******   townHall has pubsubroom error,`, err));
   townHall.on('stopping', ()=>o('error', `*******   townHall is stopping`));
