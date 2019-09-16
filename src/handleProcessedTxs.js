@@ -27,9 +27,6 @@ exports.handleProccessedTxs = async ({height})=>{
 
   const blockCid = global.blockMgr.getBlockCidByHeight(height);
   const block = (await global.ipfs.dag.get(blockCid)).value;
-  o('assert', ()=>{
-    block.height == height
-  }, 'receive new block but height is different than the blockRoom broadcasted', block.height, height);
 
   const newNodeJoinNeedRaTxsCid = [];
   const remoteAttestationDoneTxsCid = [];
