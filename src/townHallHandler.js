@@ -2,12 +2,10 @@
 import {utilities} from '../shared';
 const { tryParseJson} = utilities;
 import o from './logWebUi';
-import {remoteAttestation}  from '../shared';
-const {validateRemoteAttestationVrf} = remoteAttestation;
+import {validateRemoteAttestationVrf} from './remoteAttestation';
 import {constValue} from '../shared';
 const {ComputeTaskRoles} = constValue;
-import {computeTask} from '../shared';
-const {computeTaskOwnerConfirmationDone, sendComputeTaskRaDone} = computeTask;
+import {computeTaskOwnerConfirmationDone, sendComputeTaskRaDone} from './computeTask'
 
 exports.peerJoined = (peer)=>{
   console.log(`peer ${peer} joined`);

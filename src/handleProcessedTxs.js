@@ -9,12 +9,8 @@ const {ComputeTaskRoles} = constValue;
 import Big from 'big.js';
 import {sha256} from 'js-sha256';
 const {ecvrf, sortition} = require('vrf.js');
-
-
-import {remoteAttestation}  from '../shared';
-const {validatePot} = remoteAttestation;
+import {validatePot} from './remoteAttestation';
 import ComputeTaskPeersMgr from './nodeSimComputeTaskPeersMgr';
-const updateLog = ()=>{};//Hi Jacky, just place holder here.
 
 exports.handleProccessedTxs = async ({height})=>{
    
@@ -62,13 +58,7 @@ exports.handleProccessedTxs = async ({height})=>{
       }
       global.broadcastEvent.emit('taskRoom', JSON.stringify(remoteAttestationDoneMsg));
       o('log', `Broadcast in taskRoom about the Proof of trust verify result: ${potResult}`);
-    
-      updateLog('res_ra', {
-        name : userInfo.userName,
-        from : tx.ipfsPeerId,
-        cid : proofOfVrf.taskCid,
-        potResult
-      });
+
     }
     if(reqRaObj){
       global.rpcEvent.emit('rpcRequest', {
@@ -134,11 +124,6 @@ exports.handleProccessedTxs = async ({height})=>{
       global.nodeSimCache.computeTaskPeersMgr.setExecutorPeer(cid,  global.ipfs._peerInfo.id.toB58String());//first set myself to be the executor, then it may change if other peer send me their J and random
       global.nodeSimCache.computeTaskPeersMgr.debugOutput(cid);
     }else{
-      // updateLog('req_ra_send', {
-      //   name : userInfo.userName,
-      //   j: parseInt(j.toFixed()),
-      //   cid,
-      // })
       o('log', `bad luck, try next time`);
 
     }
@@ -197,22 +182,9 @@ const handleNewNodeJoinNeedRaTxs = ({block, blockCid, totalCreditForOnlineNodes,
       blockCid
     }
 
-    updateLog('req_ra_send', {
-      name : userInfo.userName,
-      j: parseInt(j.toFixed()),
-      blockCid,
-      cid:txCid,
-      proof: proof.toString('hex')
-    });
     return raReqObj;
     
   }else{
-    updateLog('req_ra_send', {
-      name : userInfo.userName,
-      j: parseInt(j.toFixed()),
-      cid:txCid,
-    })
-
     console.log("bad luck, try next", j.toFixed());
     o('status', 'bad luck, did not win VRF. try next time')
     return null;

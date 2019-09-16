@@ -1,8 +1,7 @@
 
-import {utilities} from '../shared';
 import o from './logWebUi';
-import {computeTask, constValue} from '../shared';
-const {executeCompute} = computeTask;
+import {constValue} from '../shared';
+import {executeCompute} from './computeTask';
 import diff from 'hyperdiff';
 
 const {ComputeTaskRoles} = constValue;

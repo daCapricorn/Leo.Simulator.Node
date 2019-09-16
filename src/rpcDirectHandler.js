@@ -1,13 +1,9 @@
 
-import {utilities} from 'leo.simulator.shared';
-const { tryParseJson} = utilities;
-import o from './logWebUi';
-import {remoteAttestation}  from 'leo.simulator.shared';
-const {validateRemoteAttestationVrf} = remoteAttestation;
 import {constValue} from 'leo.simulator.shared';
+import o from './logWebUi';
+import {validateRemoteAttestationVrf} from './remoteAttestation';
 const {ComputeTaskRoles} = constValue;
-import {computeTask} from 'leo.simulator.shared';
-const {computeTaskOwnerConfirmationDone, sendComputeTaskRaDone} = computeTask;
+import {computeTaskOwnerConfirmationDone, sendComputeTaskRaDone} from './computeTask';
 
 exports.ping = ({from, message, callbacks})=>{
   o('debug', `I receive another peer ${from} ping. I response my userInfo`);

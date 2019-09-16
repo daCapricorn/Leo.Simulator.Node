@@ -1,5 +1,5 @@
 
-const {minimalNewNodeJoinRaDeposit, expectNumberOfRemoteAttestatorsToBeVoted, expectNumberOfExecutorGroupToBeVoted} = require( './constValue');
+const {minimalNewNodeJoinRaDeposit, expectNumberOfRemoteAttestatorsToBeVoted, expectNumberOfExecutorGroupToBeVoted} = require( '../shared/constValue');
 
 const {sha256} = require( 'js-sha256');
 const { ecvrf, sortition} = require( 'vrf.js');

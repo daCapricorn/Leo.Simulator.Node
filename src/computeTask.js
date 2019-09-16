@@ -1,5 +1,5 @@
-const {minComputeGroupMembersToStartCompute, minBlockDelayRequiredBeforeComputeStart, maxBlockDelayRequiredBeforeComputeStart} = require( './constValue');
-const { o } = require( './utilities');
+const {minComputeGroupMembersToStartCompute, minBlockDelayRequiredBeforeComputeStart, maxBlockDelayRequiredBeforeComputeStart} = require( '../shared/constValue');
+const { o } = require( '../shared/utilities');
 const Docker = require('../docker');
 
 
