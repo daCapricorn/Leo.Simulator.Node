@@ -176,11 +176,11 @@ const rpcDirectHandler = {
             peerId:global.ipfs._peerInfo.id.toB58String()
           };
           console.log("User info confirmed:", global.userInfo);
-
+          const {privateKey, peerId, ...userInfoToWebUi} = global.userInfo;
           if(global.webUiPeerId){
             global.rpcEvent.emit('rpcRequest', {
               sendToPeerId: global.webUiPeerId,
-              message: JSON.stringify({type:'updateNodeUserInfo', userInfo}),
+              message: JSON.stringify({type:'updateNodeUserInfo', userInfo:userInfoToWebUi}),
               responseCallBack:(res, err)=>{
                 if(err) o('error', 'Send updateNodeUserInfo to WebUi, but got err response,', err);
               }
@@ -188,7 +188,7 @@ const rpcDirectHandler = {
             console.log('sending updateNodeUserInfo to webUi.')
           }
           else{
-            console.log('global.webUiPeerId not existing');
+            console.log('global.webUiPeerId not existing. Once global.webUiPeerid received, another userInfo will be sent to WebUi');
           }
         }
 
