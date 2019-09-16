@@ -1,6 +1,6 @@
 import autoBind from 'auto-bind';
 
-import {constValue} from 'leo.simulator.shared';
+import {constValue} from '../shared';
 const {ComputeTaskRoles, expectNumberOfExecutorGroupToBeVoted} = constValue;
 import o from './logWebUi';
 

@@ -1,0 +1,9 @@
+version: '3'
+services:
+  computer-leo:
+    container_name: leo
+    image: liyangwood/computer-leo:0.0.1
+    volumes:
+      # - ./python/run.py:/LEO/run1.py
+      - ./test.jpg:/LEO/test.jpg
+    command: python run.py

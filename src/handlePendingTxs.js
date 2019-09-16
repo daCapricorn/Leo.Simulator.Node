@@ -1,7 +1,7 @@
 
-import {utilities} from 'leo.simulator.shared';
+import {utilities} from '../shared';
 import o from './logWebUi';
-import {computeTask, constValue} from 'leo.simulator.shared';
+import {computeTask, constValue} from '../shared';
 const {executeCompute} = computeTask;
 import diff from 'hyperdiff';
 

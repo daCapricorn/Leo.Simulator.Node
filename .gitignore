@@ -80,10 +80,13 @@ node_modules
 #################
 ipfs-leo
 ipfs-storage-no-git
-
+ipfs-storate-no-git
 # reify cach #
 #################
 .reify-cache
 # compiled web js #
 #################
 ./web/js
+
+docker/test.jpg
+docker/result.jpg

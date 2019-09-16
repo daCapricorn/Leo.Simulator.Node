@@ -23,6 +23,9 @@ export default (type, ... messages) =>{
       console.log(...messages);
       global.log('status', messages[0]);
       break;
+    case 'data':
+      global.log('data', messages[0]);
+      break;
     default:
       console.log(...messages);
   }

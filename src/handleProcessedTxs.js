@@ -1,7 +1,7 @@
 
 
 import o from './logWebUi';
-import {constValue} from 'leo.simulator.shared';
+import {constValue} from '../shared';
 const {expectNumberOfRemoteAttestatorsToBeVoted, minimalNewNodeJoinRaDeposit, 
   expectNumberOfExecutorGroupToBeVoted, ComputeTaskRole} = constValue;
 const {ComputeTaskRoles} = constValue;
@@ -11,7 +11,7 @@ import {sha256} from 'js-sha256';
 const {ecvrf, sortition} = require('vrf.js');
 
 
-import {remoteAttestation}  from 'leo.simulator.shared';
+import {remoteAttestation}  from '../shared';
 const {validatePot} = remoteAttestation;
 import ComputeTaskPeersMgr from './nodeSimComputeTaskPeersMgr';
 const updateLog = ()=>{};//Hi Jacky, just place holder here.

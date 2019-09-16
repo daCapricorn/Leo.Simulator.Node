@@ -1,12 +1,12 @@
 
-import {utilities} from 'leo.simulator.shared';
+import {utilities} from '../shared';
 const { tryParseJson} = utilities;
 import o from './logWebUi';
-import {remoteAttestation}  from 'leo.simulator.shared';
+import {remoteAttestation}  from '../shared';
 const {validateRemoteAttestationVrf} = remoteAttestation;
-import {constValue} from 'leo.simulator.shared';
+import {constValue} from '../shared';
 const {ComputeTaskRoles} = constValue;
-import {computeTask} from 'leo.simulator.shared';
+import {computeTask} from '../shared';
 const {computeTaskOwnerConfirmationDone, sendComputeTaskRaDone} = computeTask;
 
 exports.peerJoined = (peer)=>{
@@ -494,6 +494,7 @@ const rpcDirectHandler = {
 
   reqComputeCompleted: ({from, guid, messageObj})=>{
     const {taskCid, result} = messageObj;
+    // o('status', `result = `+result);
     if( ComputeTaskRoles.taskOwner == global.nodeSimCache.computeTaskPeersMgr.checkMyRoleInTask(taskCid)){
       global.rpcEvent.emit('rpcResponse', {
         sendToPeerId: from, 
@@ -501,6 +502,7 @@ const rpcDirectHandler = {
         guid
       });
       o('status', `I am task Owner. I response executor's request back Great Job`);
+      o('data', result);
       computeTaskOwnerConfirmationDone(taskCid);
       o('debug', 'done: computeTaskOwnerConfirmationDone');
     }

@@ -1,10 +1,10 @@
 
 import yargs from 'yargs';
 import pkg from '../package.json';
-import {utilities} from 'leo.simulator.shared';
+import {utilities} from '../shared';
 const {o} = utilities;
 import {ipfsInit, pubsubInit} from './ipfsInit';
-import {blockMgr as BlockMgr} from 'leo.simulator.shared';
+import {blockMgr as BlockMgr} from '../shared';
 import {handleProccessedTxs} from './handleProcessedTxs';
 import {handlePendingTxs} from './handlePendingTxs';
 import events from 'events';
