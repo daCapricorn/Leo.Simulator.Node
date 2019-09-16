@@ -13,6 +13,9 @@ exports.messageHandler = (ipfs)=>async (message)=>{
   if(txType != 'newBlock'){
     return o('error', 'In block room got an unhandled message from ' + message.from + ': ' + message.data.toString());
   }
+  if(! global.userInfo){
+    o('log', "Still waiting to get my userInfo from layerone. I cannot process new block at this moment");
+    return;
+  }
   global.blockMgr.pushNewBlock(height, cid);
-  
 }
