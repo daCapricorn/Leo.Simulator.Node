@@ -1,5 +1,5 @@
 const {minComputeGroupMembersToStartCompute, minBlockDelayRequiredBeforeComputeStart, maxBlockDelayRequiredBeforeComputeStart} = require( '../shared/constValue');
-const { o } = require( '../shared/utilities');
+import o from './logWebUi';
 const Docker = require('../docker');
 
 
@@ -19,6 +19,7 @@ module.exports.executeCompute = (taskCid)=>{
   const lambdaOwnerPeerId = global.nodeSimCache.computeTaskPeersMgr.getLambdaOwnerPeer(taskCid);
 
   if(! taskOwnerPeerId || ! lambdaOwnerPeerId){
+    //o('error', 'either task owner or lambda owner is not online. computing cannot start. abort');
    throw 'either task owner or lambda owner is not online. computing cannot start. abort' + JSON.stringify({ taskOwnerPeerId, lambdaOwnerPeerId});
   }
   const reqTaskParams = {
@@ -38,7 +39,7 @@ module.exports.executeCompute = (taskCid)=>{
       return;
     }
     o('log', 'receiving response from task owner for task params:' + res);
-    
+    o('status', 'I received data from task owner');
     const {data, taskCid} = res;
     console.log('data, ', data);
     console.log(`I have got the task data from task owner, `, data);
@@ -52,6 +53,7 @@ module.exports.executeCompute = (taskCid)=>{
     computeTaskBuffer[taskCid].data = data;
     const result = await executeIfParamsAreReady(computeTaskBuffer, taskCid);
     if(result){
+      o('status', 'I have completed the compute task. Result is:' + result + ' Waiting for verification from task owner and monitors')
       sendComputeResultBackToTaskOwner(taskCid, result);
       sendComputeExecutionDoneToMonitor(taskCid);
       sendComputeTaskExecutionDone(taskCid);
@@ -63,6 +65,8 @@ module.exports.executeCompute = (taskCid)=>{
     message: JSON.stringify(reqTaskParams),
     responseCallBack: reqTaskParamsResponseHandler
   });
+
+  o('status', 'I am asking task owner for data');
   
    
   console.log(`Sending request for task data to taskOwner: PeerId:${taskOwnerPeerId}`, reqTaskParams)
@@ -73,6 +77,7 @@ module.exports.executeCompute = (taskCid)=>{
       return;
     }
     o('log', 'receiving response from lambda owner for code:' + res);
+    o('status', 'I have received lambda owner code');
     const {code, taskCid} = res;
     console.log('code, ', code);
     console.log(`I have got the lambda code from lambda owner, `, code);
@@ -98,12 +103,13 @@ module.exports.executeCompute = (taskCid)=>{
     message: JSON.stringify(reqLambdaParams),
     responseCallBack: reqLambdaParamsHandler
   });
+  o('status', 'I am asking lambda owner for code');
   console.log(`Sending request for lambda function code to lambda Owner PeerId:${lambdaOwnerPeerId}`, reqLambdaParams);
 }
 
 const executeIfParamsAreReady = async (computeTaskBuffer, taskCid)=>{
   if(computeTaskBuffer[taskCid].code && computeTaskBuffer[taskCid].data){
-
+    o("status", 'I am executing the compute task now...');
     computeTaskBuffer[taskCid].taskCid = taskCid;
     console.log(`Executor has got both data and code, it can start execution`, computeTaskBuffer[taskCid])
     const result = await executeComputeUsingEval(computeTaskBuffer[taskCid]);
@@ -127,6 +133,7 @@ const sendComputeResultBackToTaskOwner = (taskCid, result)=>{
     }
     if(res){
       o('debug', 'I am executor. I have completed the compute task. i got this result from task owner:', res);
+      o('status', 'I am executor, I received certificate from task owner');
     }
   };
   global.rpcEvent.emit('rpcRequest', {
@@ -135,6 +142,7 @@ const sendComputeResultBackToTaskOwner = (taskCid, result)=>{
     responseCallBack: reqComputeCompletedCallBack
   })
   o('debug', `I have done the task execution. i send reqComputeComplete to the task owner peer:${taskOwnerPeerId}, waiting for response.`);
+  o('status', 'I am executor, I am sending back the compute result to task owner');
 };
 
 const sendComputeExecutionDoneToMonitor = (taskCid)=>{
@@ -150,6 +158,7 @@ const sendComputeExecutionDoneToMonitor = (taskCid)=>{
     }
     if(res){
       o('debug', 'I am executor. I have completed the compute task. i got this result from my remote attestator:', res);
+      o('status', 'I am executor, I received certificate from monitor');
     }
   };
   for(let sendToPeerId of monitorsPeers){
@@ -158,7 +167,7 @@ const sendComputeExecutionDoneToMonitor = (taskCid)=>{
       message:JSON.stringify(reqComputeCompleted),
       responseCallBack: reqComputeCompletedFromMonitorCallBack
     });
-     o('debug', `I have done the task execution. i send reqComputeComplete to my monitor peer:${sendToPeerId}, waiting for response.`);
+    o('debug', `I have done the task execution. i send reqComputeComplete to my monitor peer:${sendToPeerId}, waiting for response.`);
   };
   
 };
@@ -172,7 +181,7 @@ module.exports.sendComputeTaskRaDone = (taskCid, raResult=true)=>{
     raResult
   }
   global.broadcastEvent.emit('taskRoom', JSON.stringify(computeTaskRaDoneObj));
-  o('log', 'computer ra task done. send out broadcast in taskRoom');
+  o('status', ' I am monitor. I confirmed that computer ra task done');
 }
 
 module.exports.computeTaskOwnerConfirmationDone = (taskCid, result = true)=>{
@@ -185,6 +194,7 @@ module.exports.computeTaskOwnerConfirmationDone = (taskCid, result = true)=>{
   }
   global.broadcastEvent.emit('taskRoom', JSON.stringify(computeTaskOwnerConfirmationDoneObj));
   o('log', 'computer computeTaskOwnerConfirmationDone. send out broadcast in taskRoom');
+  o('status', 'I am task owner. i confirmed task completed.')
 }
 
 
@@ -200,6 +210,7 @@ const sendComputeTaskExecutionDone = (taskCid)=>{
   }
   global.broadcastEvent.emit('taskRoom', JSON.stringify(computeTaskDoneObj));
   o('log', 'computer task done. send out broadcast in taskRoom');
+  o('status', ' I am executor. I confirmed that computer ra task done');
 }
 // const chooseExecutorAndMonitors = (task)=>{
 //   let executor;

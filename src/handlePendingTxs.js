@@ -185,7 +185,7 @@ const handlePendingComputeTaskStart = (block)=> async (taskCid)=>{
     o('status', 'I am executor.')
     try{executeCompute(taskCid);}
     catch(e){
-      o('error', "executeCompute error", e);
+      o('error', "executeCompute error" + e.toString());
     }
   }
   else if(global.nodeSimCache.computeTaskPeersMgr.checkMyRoleInTask(taskCid) == ComputeTaskRoles.taskOwner){
