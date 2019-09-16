@@ -42,6 +42,12 @@ export default (rpcDirectHandler)=>async ({from, guid, verb, data})=>{
     }
   }
   catch(e){
-    return o('error', 'executing handlerFunction inside townhall has exception:', e);
+    global.rpcEvent.emit('rpcResponse', {
+      sendToPeerId: from,
+      err: 'executing handlerFunction inside townhall has exception:' + e.toString(),
+      guid
+    })
+    o('error', 'executing handlerFunction inside townhall has exception and sent to RPC caller:', e);
+    
   }
 }

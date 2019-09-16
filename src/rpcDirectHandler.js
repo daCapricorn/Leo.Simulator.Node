@@ -332,7 +332,7 @@ exports.reqVerifyPeerVrfForComputeTasks = ({from, message, callbacks})=>{
   handleReqVerifyPeerReRunable(message);
 },
 
-exports.eqComputeCompleted = ({from, message, callbacks})=>{
+exports.reqComputeCompleted = ({from, message, callbacks})=>{
   const {taskCid, result} = message;
   if( ComputeTaskRoles.taskOwner == global.nodeSimCache.computeTaskPeersMgr.checkMyRoleInTask(taskCid)){
     callbacks.rpcResponse({resMessage: {feedback:"Great Job!"}});
