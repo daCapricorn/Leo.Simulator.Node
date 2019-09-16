@@ -88,5 +88,4 @@ ipfs-storate-no-git
 #################
 ./web/js
 
-docker/test.jpg
-docker/result.jpg
+docker/*.jpg

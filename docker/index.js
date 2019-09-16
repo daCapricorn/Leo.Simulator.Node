@@ -14,8 +14,8 @@ module.exports = class {
   }
 
   getPath(){
-    return process.cwd()+'/docker';
-    // return __dirname;
+    // return process.cwd()+'/docker';
+    return __dirname;
   }
 
   writeToFile(str){
@@ -30,7 +30,7 @@ module.exports = class {
 
   executeFunc(){
     const spawn = require('child_process').spawnSync;
-    const cmd = spawn('docker-compose', ['-f', './docker/docker-compose.yml', 'up']);
+    const cmd = spawn('docker-compose', ['-f', this.getPath()+'/docker-compose.yml', 'up']);
     
     console.log(`stdout: ${cmd.stdout.toString()}`);
 
