@@ -74,8 +74,7 @@ exports.getOptions = ()=>{
     .version(pkg.version)
     .usage(`Usage: $0 -u user#`)
     .boolean([
-      'hacked',
-      'leader'
+      'hacked'
     ])
     .option('swarm', {
       alias:[
@@ -100,21 +99,6 @@ exports.getOptions = ()=>{
       ],
       description: 'Force this node perform as a hacked node',
       type: 'boolean',
-    })
-    .option('leader', {
-      alias: [
-        'l',
-      ],
-      description: 'Force this node to become the leader for debug purpose',
-      type: 'boolean',
-    })
-    .option('port', {
-      alias: [
-        'p',
-      ],
-      description: 'Web monitor port number',
-      type: 'number',
-      default: 2999,
     })
     .option('user', {
       alias: [

@@ -86,17 +86,43 @@ exports.rpcResponse =  (room)=>(args)=>{
   room.rpcResponse(sendToPeerId, message, guid, err);
 }
 const rpcDirectHandler = {
-  ping: ({from, guid})=>{
+  ping: ({from, guid, messageObj})=>{
     o('debug', `I receive another peer ${from} ping. I response my userInfo`);
-    const resMessage = {
-      type:'pong',
-      userInfo:global.userInfo? global.userInfo: {peerId:global.ipfs._peerInfo.id.toB58String()}
-    };
-    global.rpcEvent.emit('rpcResponse', {
-      sendToPeerId: from,
-      message: JSON.stringify(resMessage),
-      guid
-    });
+    const {userInfo, specialRole} = messageObj;
+    if(userInfo){
+      global.allPeers[from] = userInfo;
+      o('debug', `I receive a ping from peer ${from} with his userInfo added to my peer list,`, userInfo);
+    } 
+    else if(specialRole == 'WebUi'){
+      global.webUiPeerId = from;
+      global.allPeers[from] = {specialRole};
+      o('debug', `I receive a ping from WebUi peer ${from}, He has a special role,`, specialRole);           
+    }
+    else if(specialRole == 'LayerOneBlockChain'){
+      global.allPeers[from] = {specialRole};
+
+    }
+    else{
+      //Pinger did not send his userInfo or Special Role
+
+    }
+    if(global.userInfo){
+      const resMessage = {
+        type:'pong',
+        userInfo:global.userInfo? global.userInfo: null
+      };
+      global.rpcEvent.emit('rpcResponse', {
+        sendToPeerId: from,
+        message: JSON.stringify(resMessage),
+        guid
+      });
+    }else{
+      global.rpcEvent.emit('rpcResponse', {
+        sendToPeerId: from,
+        err:'I have not got a user name from layer one yet. i will update you when I have one',
+        guid
+      });
+    }
     
     if(! global.allPeers[from]){
       o('debug', `this user is not in my peer list. after pong my user info, I am requesting him a ping for his userinfo`);
@@ -158,7 +184,11 @@ const rpcDirectHandler = {
               responseCallBack:(res, err)=>{
                 if(err) o('error', 'Send updateNodeUserInfo to WebUi, but got err response,', err);
               }
-            })
+            });
+            console.log('sending updateNodeUserInfo to webUi.')
+          }
+          else{
+            console.log('global.webUiPeerId not existing');
           }
         }
 

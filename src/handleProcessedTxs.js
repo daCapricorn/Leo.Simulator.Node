@@ -187,7 +187,7 @@ const handleNewNodeJoinNeedRaTxs = ({block, blockCid, totalCreditForOnlineNodes,
   const j = sortition.getVotes(value, new Big(myCurrentCreditBalance), new Big(p));
   if(j.gt(0)){
     console.log("I am lucky!!! J:", j.toFixed());
-    o('status', `I won VRF of New Node Join RA. J value is ${$j.toFixed()}`);
+    o('status', `I won VRF of New Node Join RA. J value is ${j.toFixed()}`);
     const raReqObj = {
       type:'reqRemoteAttestation',
       j:parseInt(j.toFixed()), 
@@ -217,6 +217,7 @@ const handleNewNodeJoinNeedRaTxs = ({block, blockCid, totalCreditForOnlineNodes,
     })
 
     console.log("bad luck, try next", j.toFixed());
+    o('status', 'bad luck, did not win VRF. try next time')
     return null;
   }
 
