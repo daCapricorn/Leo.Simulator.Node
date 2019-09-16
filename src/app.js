@@ -1,8 +1,7 @@
 
 import yargs from 'yargs';
 import pkg from '../package.json';
-import {utilities} from '../shared';
-const {o} = utilities;
+import o from './logWebUi';
 import {ipfsInit, pubsubInit} from './ipfsInit';
 import {blockMgr as BlockMgr} from '../shared';
 import {handleProccessedTxs} from './handleProcessedTxs';

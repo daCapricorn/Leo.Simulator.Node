@@ -6,20 +6,6 @@ module.exports.exitGraceful = (exitCode = 0) => {
 
 };
 
-
-module.exports.o = (type, ... messages) =>{
-  try{
-    console[type].apply(this, messages);
-  }
-  catch(e){
-    console.error('Utilities.o has exception,', e);
-  }
-  
-
-};
-
-
-
 module.exports.tryParseJson = (s)=>{
   try{
     return JSON.parse(s);
