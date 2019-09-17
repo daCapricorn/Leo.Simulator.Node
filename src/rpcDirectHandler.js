@@ -103,29 +103,7 @@ exports.reqUserInfo = ({from, callbacks})=>{
   callbacks.rpcResponseWithNewRequest({resMessage, responseCallBack});
   o('log', `send back reqUserInfo to townhall manager using RPC response`, resMessage);
 };
-exports.simulatorRequestAction = async ({from, message, callbacks})=>{
 
-  console.log('from simulator request action,', message);
-
-  const {txType, ...cidObj} = { ...message.action};
-  switch(txType){
-    case 'newNodeJoinNeedRa':
-      cidObj.ipfsPeerId = ipfs._peerInfo.id.toB58String();
-      break;
-  }
-  
-  const cid = (await global.ipfs.dag.put(cidObj)).toBaseEncodedString();
-
-  if(txType === 'computeTask'){
-    global.nodeSimCache.computeTaskPeersMgr.addNewComputeTask(cid);
-    await global.nodeSimCache.computeTaskPeersMgr.assignSpecialRoleToTask(cid, global.userInfo.userName);
-  }
-
-  global.broadcastEvent.emit('taskRoom', JSON.stringify({txType, cid}));
-  o('status', `Tx ${txType} sent.`)
-  callbacks.rpcResponse({resMessage:{result:'ok'}});
-  console.log("send back to simulatorRequestAction requestor:")
-};
 
 
 exports.reqRemoteAttestation = async ({from, message, callbacks})=>{//Now I am new node, sending back poT after validate the remote attestation is real
@@ -350,3 +328,26 @@ exports.reqComputeCompleted = ({from, message, callbacks})=>{
   }
 }
 
+exports.webUiAction = async ({from, message, callbacks})=>{
+  if(from != global.webUiPeerId){
+    return o('error', 'Only WebUi peer can send me the webUiAction message.')
+  }
+  const {txType, ...action} = { ...message.action};
+  switch(txType){
+    case 'newNodeJoinNeedRa':
+      action.ipfsPeerId = ipfs._peerInfo.id.toB58String();
+      break;
+  }
+  
+  const cid = (await global.ipfs.dag.put(action)).toBaseEncodedString();
+
+  if(txType === 'computeTask'){
+    global.nodeSimCache.computeTaskPeersMgr.addNewComputeTask(cid);
+    await global.nodeSimCache.computeTaskPeersMgr.assignSpecialRoleToTask(cid, global.userInfo.userName);
+  }
+
+  global.broadcastEvent.emit('taskRoom', JSON.stringify({txType, cid}));
+  o('status', `Tx ${txType} sent.`)
+  callbacks.rpcResponse({resMessage:{result:'ok'}});
+  console.log("send back to webUi on action")
+};
