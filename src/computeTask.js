@@ -1,14 +1,5 @@
-const {minComputeGroupMembersToStartCompute, minBlockDelayRequiredBeforeComputeStart, maxBlockDelayRequiredBeforeComputeStart} = require( '../shared/constValue');
 import o from './logWebUi';
 const Docker = require('../docker');
-
-
-module.exports.eligibilityCheck = (currentBlockHeight, task)=>{
-
-
-
-  return true
-}
 
 module.exports.executeCompute = (taskCid)=>{
   //this is just a place holder, in the real system, we should launch docker and run the command to get the result.

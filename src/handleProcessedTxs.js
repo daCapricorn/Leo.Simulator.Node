@@ -48,6 +48,7 @@ exports.handleProccessedTxs = async ({height})=>{
         return console.log(`I am a Remote Attestator, I received new node's error response :, err is `, err);
       }
       o('log',`I am a Remote Attestator, I received new node's reply :, payload is `, res);
+      o('status', ' I am a Remote Attestator. I have received new nodes PoT');
       const {proofOfVrf, proofOfTrust} = res;
       const potResult = validatePot(proofOfTrust);
       o('log', `Proof of trust verify result: ${potResult}`);
@@ -58,7 +59,7 @@ exports.handleProccessedTxs = async ({height})=>{
       }
       global.broadcastEvent.emit('taskRoom', JSON.stringify(remoteAttestationDoneMsg));
       o('log', `Broadcast in taskRoom about the Proof of trust verify result: ${potResult}`);
-
+      o('status', `I have completed RA task. The new node is ${potResult? "good" : "bad"}`);
     }
     if(reqRaObj){
       global.rpcEvent.emit('rpcRequest', {
@@ -67,6 +68,7 @@ exports.handleProccessedTxs = async ({height})=>{
         responseCallBack:handleRaResponse
       });
       o('log', `Sending townhall request to the new node: ${tx.ipfsPeerId}  for RA:`, reqRaObj);
+      o('status', 'I am asking new node for PoT');
     }else{
       console.log("reqRaObj is null");
     }
@@ -125,7 +127,7 @@ exports.handleProccessedTxs = async ({height})=>{
       global.nodeSimCache.computeTaskPeersMgr.debugOutput(cid);
     }else{
       o('log', `bad luck, try next time`);
-
+      o('status', 'bad luck. Did not win VRF. Try next time');
     }
     
   });

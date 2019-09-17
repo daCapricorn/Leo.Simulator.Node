@@ -158,6 +158,7 @@ const handlePendingComputeTask = (block)=>( taskCid)=>{
       message:JSON.stringify(requestToOtherPeerForProof), 
       responseCallBack:handleRpcResponse(taskCid)
     });
+    o('status', "In order to get consensus on who is executor in our group. I am sending out VRF request to other peers in our execution group. I need to verify them first then add to my partners list")
     o('debug', `I ${global.userInfo.userName} send out a rpcReqeust to peer ${addedPeer}`);
   });
 

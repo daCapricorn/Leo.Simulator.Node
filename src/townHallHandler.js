@@ -73,9 +73,6 @@ exports.rpcResponseWithNewRequest = (room)=>(args)=>{
 }
 exports.rpcRequest = (room)=>(args)=>{
   const {sendToPeerId, message, responseCallBack} = args;
-  // sendToPeerId:tx.ipfsPeerId, 
-  // message:JSON.stringify(raReqObj), 
-  // responseCallBack:handleRaResponse
   room.rpcRequest(sendToPeerId, message, responseCallBack);
 }
 exports.rpcResponse =  (room)=>(args)=>{
