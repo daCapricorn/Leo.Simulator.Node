@@ -4,11 +4,11 @@ export default (type, ... messages) =>{
     case 'err':
     case 'error':
       console.error(...messages);
-      global.log('error', messages[0])
+      if(global.log)  global.log('error', messages[0])
       break;
     case 'info':
       console.log(...messages);
-      global.log('info', messages[0])
+      if(global.log)  global.log('info', messages[0])
       break;
     case 'log':
     case 'debug':
@@ -17,14 +17,14 @@ export default (type, ... messages) =>{
       break;
     case 'warning':
       console.log(...messages);
-      global.log('warning', messages[0])
+      if(global.log)  global.log('warning', messages[0])
       break;
     case 'status':
       console.log(...messages);
-      global.log('status', messages[0]);
+      if(global.log)  global.log('status', messages[0]);
       break;
     case 'data':
-      global.log('data', messages[0]);
+      if(global.log)  global.log('data', messages[0]);
       break;
     default:
       console.log(...messages);

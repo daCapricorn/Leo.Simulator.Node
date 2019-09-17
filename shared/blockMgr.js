@@ -1,4 +1,4 @@
-const {o} = require('./utilities');
+import o from '../src/logWebUi';
 const _ = require('lodash');
 const events = require ('events');
 const autoBind = require ('auto-bind');
@@ -15,18 +15,27 @@ module.exports = class BlockMgr{
   }
   pushNewBlock(height, cid){
     if(this._blockHistory[height]){
-      if(this._blockHistory[height] != cid){
+      if(height == 0 && this.getLatestBlockHeight > 0){
+        this._resetBlockHistoryDebugOnly()
+      }
+      else if(this._blockHistory[height] != cid){
         o('error', 'Find a new block with existing height but the cid is different. This should not happen', {height, cid});
         return;
       }else{
         return;
       }
-    }else{
-      this._blockHistory[height] = {cid};
-      if(height > this._maxHeight) this._maxHeight = height;
-      this._newBlockEvent.emit('newBlock', {height, cid});
     }
+    this._blockHistory[height] = {cid};
+    if(height > this._maxHeight) this._maxHeight = height;
+    this._newBlockEvent.emit('newBlock', {height, cid});
+  
   }
+  _resetBlockHistoryDebugOnly(){
+    this._blockHistory = {};
+    this._maxHeight = 0;
+    
+  }
+
   getBlockCidByHeight(height){
     return this._blockHistory[height]? this._blockHistory[height].cid: undefined;
   }
