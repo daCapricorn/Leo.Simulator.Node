@@ -10,15 +10,15 @@ chai.use(chaiAsPromised);
 
 import IPFS  from 'ipfs';
 
-describe('IPFS', ()=>{
-  describe('ipfs init', ()=>{
-    it('ipfs init with option default to local. This test intend to end with pending.',async ()=>{
-      const ipfs = await ipfsInit('/ip4/127.0.0.1/tcp/9090/ws/p2p-websocket-star');
-      console.log("peerId is", ipfs._peerInfo.id.toB58String());
-      expect(ipfs).to.exist;
-    });
-  });
-});
+// describe('IPFS', ()=>{
+//   describe('ipfs init', ()=>{
+//     it('ipfs init with option default to local. This test intend to end with pending.',async ()=>{
+//       const ipfs = await ipfsInit('/ip4/127.0.0.1/tcp/9090/ws/p2p-websocket-star');
+//       console.log("peerId is", ipfs._peerInfo.id.toB58String());
+//       expect(ipfs).to.exist;
+//     });
+//   });
+// });
 
 
 

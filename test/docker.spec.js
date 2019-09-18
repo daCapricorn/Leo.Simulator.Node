@@ -18,20 +18,20 @@ describe('docker folder', ()=>{
   //   expect(rs).to.eql('a+b');
   // });
 
-  it('getPath', ()=>{
-    const d = new Docker();
-    const rs = d.getPath();
-    expect(_.includes(rs, process.cwd())).to.eql(true);
-  })
+  // it('getPath', ()=>{
+  //   const d = new Docker();
+  //   const rs = d.getPath();
+  //   expect(_.includes(rs, process.cwd())).to.eql(true);
+  // })
 
-  it('run', ()=>{
-    const d = new Docker();
-    const rs = d.run({
-      type : 'image',
-      code : fake_img
-    });
+  // it('run', ()=>{
+  //   const d = new Docker();
+  //   const rs = d.run({
+  //     type : 'image',
+  //     code : fake_img
+  //   });
 
-    expect(rs).not.to.eql(true);
-  });
+  //   expect(rs).not.to.eql(true);
+  // });
 });
 

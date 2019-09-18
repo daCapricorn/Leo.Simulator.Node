@@ -1,5 +1,6 @@
 import o from './logWebUi';
 const Docker = require('../docker');
+const {crypto, cache} = require('../shared/utilities');
 
 module.exports.executeCompute = (taskCid)=>{
   //this is just a place holder, in the real system, we should launch docker and run the command to get the result.
@@ -22,9 +23,11 @@ module.exports.executeCompute = (taskCid)=>{
   const reqLambdaParams = {
     type:'reqLambdaParams',
     taskCid,
-    blockHeight:global.blockMgr.getLatestBlockHeight()
+    blockHeight:global.blockMgr.getLatestBlockHeight(),
+    public_key: crypto.getPublicKey()
   };
   const reqTaskParamsResponseHandler = async (res, err)=>{
+    // TODO
     if(err){
       o('error', `I have got the task data from task owner but it is an error, ` +  err);
       return;
@@ -69,17 +72,19 @@ module.exports.executeCompute = (taskCid)=>{
     }
     o('log', 'receiving response from lambda owner for code:' + res);
     o('status', 'I have received lambda owner code');
-    const {code, taskCid} = res;
-    console.log('code, ', code);
-    console.log(`I have got the lambda code from lambda owner, `, code);
+    const {cid, taskCid} = res;
+    console.log('code, ', cid);
+    console.log(`I have got the lambda code from lambda owner, `, cid);
     computeTaskBuffer[taskCid] = computeTaskBuffer[taskCid] || {};
     
     if(computeTaskBuffer[taskCid].code){
-      throw `Error, executor has got the code already, why a new code come up again?` +  JSON.stringify({code, buffer: computeTaskBuffer});
+      throw `Error, executor has got the code already, why a new code come up again?` +  JSON.stringify({code:cid, buffer: computeTaskBuffer});
       
     }
 
-    computeTaskBuffer[taskCid].code = code;
+    computeTaskBuffer[taskCid].code = cid;
+    //TODO
+    computeTaskBuffer[taskCid].data = res;
     console.log('computeTaskBuffer', computeTaskBuffer);
     const result = await executeIfParamsAreReady(computeTaskBuffer, taskCid);
     if(result){
@@ -99,7 +104,7 @@ module.exports.executeCompute = (taskCid)=>{
 }
 
 const executeIfParamsAreReady = async (computeTaskBuffer, taskCid)=>{
-  if(computeTaskBuffer[taskCid].code && computeTaskBuffer[taskCid].data){
+  if(computeTaskBuffer[taskCid].data && computeTaskBuffer[taskCid].code){
     o("status", 'I am executing the compute task now...');
     computeTaskBuffer[taskCid].taskCid = taskCid;
     console.log(`Executor has got both data and code, it can start execution`, computeTaskBuffer[taskCid])
@@ -216,26 +221,30 @@ const sendComputeTaskExecutionDone = (taskCid)=>{
 // }
 // exports.chooseExecutorAndMonitors = chooseExecutorAndMonitors;
 
-const executeComputeUsingEval = async ({code, data, taskCid})=>{
-  const args = data;
-  const r = await getLambdaValueFromTaskCid(taskCid);
+const executeComputeUsingEval = async (param)=>{
+  const r = await getLambdaValueFromTaskCid(param.data);
   if(r){
     return r;
   }
   
-  return eval(code);
+  throw 'execute error';
+  // return '';
 }
 module.exports.executeComputeUsingEval = executeComputeUsingEval;
 
-const getLambdaValueFromTaskCid = async (taskCid)=>{
-  const r1 = (await ipfs.dag.get(taskCid)).value;
-  const d = (await ipfs.dag.get(r1.lambdaCid)).value;
+const getLambdaValueFromTaskCid = async (data)=>{
+  const source_data_encrypto = (await ipfs.dag.get(data.cid)).value;
+  const key = crypto.privateDecrypt(data.secret_key, crypto.getPrivateKey());
+  const source_data = crypto.decrypt(source_data_encrypto, key);
 
-  if(d.dockerImg === 'image'){
+  console.log(11, source_data.length);
+  if(data.dockerImg === 'test') return 'Hello World';
+
+  if(data.dockerImg === 'image'){
     const docker = new Docker();
     const rs = docker.run({
       type : 'image',
-      code : d.code
+      code : source_data
     });
 
     return rs;

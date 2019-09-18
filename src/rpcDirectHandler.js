@@ -1,10 +1,11 @@
 
-import {constValue} from 'leo.simulator.shared';
+import {constValue, utilities} from '../shared';
 import o from './logWebUi';
 import {validateRemoteAttestationVrf} from './remoteAttestation';
 const {ComputeTaskRoles} = constValue;
 import {computeTaskOwnerConfirmationDone, sendComputeTaskRaDone} from './computeTask';
 
+const {crypto, cache} = utilities;
 exports.ping = ({from, message, callbacks})=>{
   o('debug', `I receive another peer ${from} ping. I response my userInfo`);
   const {userInfo, specialRole} = message;
@@ -75,12 +76,13 @@ exports.reqUserInfo = ({from, callbacks})=>{
       if(! userInfo){
         o('error', 'cannot find userinfo from requestRandomUserInfo response. probably all users are online. No need for more terminal');
       }else{
-
+        
         global.userInfo = {
           userName: userInfo.name,
           publicKey: userInfo.pub,
           privateKey: userInfo.pri,
-          peerId:global.ipfs._peerInfo.id.toB58String()
+          peerId:global.ipfs._peerInfo.id.toB58String(),
+          crpyto_public_key: crypto.getPublicKey()
         };
         console.log("User info confirmed:", global.userInfo);
         const {privateKey, peerId, ...userInfoToWebUi} = global.userInfo;
@@ -166,21 +168,36 @@ exports.reqLambdaParams = ({from, message, callbacks})=>{
   console.log('I have got a request for Lambda Params reqLambdaParams, message', message);
   const mayDelayExecuteDueToBlockDelay = (message)=>{
     
-    const {taskCid, blockHeight} = message;
+    const {taskCid, blockHeight, public_key} = message;
     if(blockHeight <= global.blockMgr.getLatestBlockHeight()){
       try{
         if( global.nodeSimCache.computeTaskPeersMgr.getExecutorPeer(taskCid) != from){
           o('log', `Executor validate fail`);
           return;
         }
-        const resMessage = {
-          type:'resLambdaParams',
-          code:'args[0] + args[1]',
-          taskCid
-        };
-        callbacks.rpcResponse({resMessage})
+        // const resMessage = {
+        //   type:'resLambdaParams',
+        //   code:'args[0] + args[1]',
+        //   taskCid
+        // };
+        ipfs.dag.get(taskCid).then((rs)=>{
+          const lambdaCid = rs.value.lambdaCid;
+          ipfs.dag.get(lambdaCid).then((rs)=>{
+            const d = rs.value;
 
-        o('log', `Sending response for Lambda Params back to executor.`, resMessage);
+            const resMessage = {
+              ...d,
+              taskCid,
+              type:'resLambdaParams',
+              secret_key: crypto.publicEncrypt(cache.get(lambdaCid), public_key)
+            };
+
+            callbacks.rpcResponse({resMessage})
+            o('log', `Sending response for Lambda Params back to executor.`, resMessage);
+          });
+        })
+        
+        
       }
       catch(e){
         o('error', 'reqLambdaParams handler has exception:', e);
@@ -311,6 +328,7 @@ exports.reqComputeCompleted = ({from, message, callbacks})=>{
   if( ComputeTaskRoles.taskOwner == global.nodeSimCache.computeTaskPeersMgr.checkMyRoleInTask(taskCid)){
     callbacks.rpcResponse({resMessage: {feedback:"Great Job!"}});
     o('status', `I am task Owner. I response executor's request back Great Job`);
+    o('data', result);
     computeTaskOwnerConfirmationDone(taskCid);
     o('debug', 'done: computeTaskOwnerConfirmationDone');
   }
@@ -333,13 +351,28 @@ exports.webUiAction = async ({from, message, callbacks})=>{
     return o('error', 'Only WebUi peer can send me the webUiAction message.')
   }
   const {txType, ...action} = { ...message.action};
+
+  let secret_key = null;
   switch(txType){
     case 'newNodeJoinNeedRa':
       action.ipfsPeerId = ipfs._peerInfo.id.toB58String();
       break;
+    case 'uploadLambda':
+      const tmp = action.code;
+      secret_key = crypto.md5(tmp);
+      const c_tmp = crypto.encrypt(tmp, secret_key);
+      const tmp_cid = (await global.ipfs.dag.put(c_tmp)).toBaseEncodedString();
+      delete action.code;
+      action.cid = tmp_cid;
+      break;
+  }
+
+  const cid = (await global.ipfs.dag.put(action)).toBaseEncodedString();
+  if(secret_key){
+    cache.set(cid, secret_key);
+    console.log('uploadLambda => ', action, secret_key);
   }
   
-  const cid = (await global.ipfs.dag.put(action)).toBaseEncodedString();
 
   if(txType === 'computeTask'){
     global.nodeSimCache.computeTaskPeersMgr.addNewComputeTask(cid);
@@ -347,7 +380,7 @@ exports.webUiAction = async ({from, message, callbacks})=>{
   }
 
   global.broadcastEvent.emit('taskRoom', JSON.stringify({txType, cid}));
-  o('status', `Tx ${txType} sent.`)
+  o('status', `Tx ${txType} sent. -- ${cid}`)
   callbacks.rpcResponse({resMessage:{result:'ok'}});
   console.log("send back to webUi on action")
 };

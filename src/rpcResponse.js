@@ -1,4 +1,4 @@
-import {utilities} from 'leo.simulator.shared';
+import {utilities} from '../shared';
 const {tryParseJson} = utilities;
 import o from './logWebUi'
 
