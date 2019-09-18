@@ -1,11 +1,12 @@
-
+import fs from 'fs';
 import {constValue, utilities} from '../shared';
 import o from './logWebUi';
 import {validateRemoteAttestationVrf} from './remoteAttestation';
 const {ComputeTaskRoles} = constValue;
 import {computeTaskOwnerConfirmationDone, sendComputeTaskRaDone} from './computeTask';
 
-const {crypto, cache} = utilities;
+import {crypto} from '../shared/utilities';
+
 exports.ping = ({from, message, callbacks})=>{
   o('debug', `I receive another peer ${from} ping. I response my userInfo`);
   const {userInfo, specialRole} = message;
@@ -136,8 +137,9 @@ exports.reqRemoteAttestation = async ({from, message, callbacks})=>{//Now I am n
 exports.reqTaskParams= ({from, message, callbacks})=>{
   console.log('I have got a request for reqTaskParams, message', message);
   
-  const mayDelayExecuteDueToBlockDelay = (message)=>{
-    const {taskCid, blockHeight} = message;
+  const mayDelayExecuteDueToBlockDelay = async (message)=>{
+    const {taskCid, blockHeight, public_key} = message;
+    console.assert(public_key, 'forgot public_key');
     if(blockHeight <= global.blockMgr.getLatestBlockHeight()){
       //this node is slower than the executor who send me the request. I have to wait till I have such a block to continue;
       try{
@@ -145,10 +147,32 @@ exports.reqTaskParams= ({from, message, callbacks})=>{
           o('log', `Executor validate fail`);
           return;
         }
+        const task = (await global.ipfs.dag.get(taskCid)).value;
+        const {postSecData} = task;
+        const fileContentBase64 = (()=>{
+          try{
+            const demo_data_folder = require('path').resolve(__dirname, '..') + '/demo-data';
+  
+            const bin = fs.readFileSync(demo_data_folder + '/' + postSecData);
+            return new Buffer(bin).toString('base64');
+          }
+          catch(e){
+            o('error', 'cannot read file from local path' + postSecData);
+            return null;
+          }
+        })();
+        //o('log', 'fileContentBase64', fileContentBase64);
+        const md5 = crypto.md5(fileContentBase64);
+        const fileEnc = crypto.encrypt(fileContentBase64, md5);
+        const secret_key = crypto.publicEncrypt(md5, public_key);
+        const fileEncCid = (await global.ipfs.dag.put(fileEnc)).toBaseEncodedString();
         const resMessage = {
           type:'resTaskParams',
-          data:['Hello', " World!"],
-          taskCid
+          data:{
+            cid:fileEncCid,
+            secret_key
+          },
+          taskCid, 
         };
         callbacks.rpcResponse({resMessage})
         o('log', `Sending response for Task data back to executor.`, resMessage);
@@ -166,7 +190,7 @@ exports.reqTaskParams= ({from, message, callbacks})=>{
 };
 exports.reqLambdaParams = ({from, message, callbacks})=>{
   console.log('I have got a request for Lambda Params reqLambdaParams, message', message);
-  const mayDelayExecuteDueToBlockDelay = (message)=>{
+  const mayDelayExecuteDueToBlockDelay = async (message)=>{
     
     const {taskCid, blockHeight, public_key} = message;
     if(blockHeight <= global.blockMgr.getLatestBlockHeight()){
@@ -175,27 +199,56 @@ exports.reqLambdaParams = ({from, message, callbacks})=>{
           o('log', `Executor validate fail`);
           return;
         }
+        const {lambdaCid} = (await global.ipfs.dag.get(taskCid)).value;
+        const {localSourceCode, docker_yaml} = (await global.ipfs.dag.get(lambdaCid)).value;
+        const fileContent = (()=>{
+          try{
+            const demo_data_folder = require('path').resolve(__dirname, '..') + '/demo-data';
+  
+            return fs.readFileSync(demo_data_folder + '/' + localSourceCode, 'utf8');
+          }
+          catch(e){
+            o('error', 'cannot read file from local path' + localSourceCode);
+            return null;
+          }
+        })();
+        //o('log', 'fileContent', localSourceCode);
+        const md5 = crypto.md5(fileContent);
+        const fileEnc = crypto.encrypt(fileContent, md5);
+        const secret_key = crypto.publicEncrypt(md5, public_key);
+        const fileEncCid = (await global.ipfs.dag.put(fileEnc)).toBaseEncodedString();
+        const resMessage = {
+          type:'resLambdaParams',
+          code:{
+            cid:fileEncCid,
+            secret_key
+          },
+          docker_yaml,
+          taskCid, 
+        };
+        callbacks.rpcResponse({resMessage})
+        o('log', `Sending response for lambda code back to executor.`, resMessage);
         // const resMessage = {
         //   type:'resLambdaParams',
         //   code:'args[0] + args[1]',
         //   taskCid
-        // };
-        ipfs.dag.get(taskCid).then((rs)=>{
-          const lambdaCid = rs.value.lambdaCid;
-          ipfs.dag.get(lambdaCid).then((rs)=>{
-            const d = rs.value;
+        // // };
+        // ipfs.dag.get(taskCid).then((rs)=>{
+        //   const lambdaCid = rs.value.lambdaCid;
+        //   ipfs.dag.get(lambdaCid).then((rs)=>{
+        //     const d = rs.value;
 
-            const resMessage = {
-              ...d,
-              taskCid,
-              type:'resLambdaParams',
-              secret_key: crypto.publicEncrypt(cache.get(lambdaCid), public_key)
-            };
+        //     const resMessage = {
+        //       ...d,
+        //       taskCid,
+        //       type:'resLambdaParams',
+        //       secret_key: crypto.publicEncrypt(cache.get(lambdaCid), public_key)
+        //     };
 
-            callbacks.rpcResponse({resMessage})
-            o('log', `Sending response for Lambda Params back to executor.`, resMessage);
-          });
-        })
+        //     callbacks.rpcResponse({resMessage})
+        //     o('log', `Sending response for Lambda Params back to executor.`, resMessage);
+        //   });
+        // })
         
         
       }
@@ -357,28 +410,29 @@ exports.webUiAction = async ({from, message, callbacks})=>{
     case 'newNodeJoinNeedRa':
       action.ipfsPeerId = ipfs._peerInfo.id.toB58String();
       break;
-    case 'uploadLambda':
-      const tmp = action.code;
-      secret_key = crypto.md5(tmp);
-      const c_tmp = crypto.encrypt(tmp, secret_key);
-      const tmp_cid = (await global.ipfs.dag.put(c_tmp)).toBaseEncodedString();
-      delete action.code;
-      action.cid = tmp_cid;
-      break;
-  }
+    // case 'computeTask':{
+    //   const tmp = action.postSecData;
+    //   secret_key = crypto.md5(tmp);
+    //   const c_tmp = crypto.encrypt(tmp, secret_key);
+    //   const tmp_cid = (await global.ipfs.dag.put(c_tmp)).toBaseEncodedString();
+    //   delete action.postSecData;
+    //   action.cid = tmp_cid;
 
-  const cid = (await global.ipfs.dag.put(action)).toBaseEncodedString();
-  if(secret_key){
-    cache.set(cid, secret_key);
-    console.log('uploadLambda => ', action, secret_key);
+      
+    //   break;
+    // }
   }
   
-
-  if(txType === 'computeTask'){
+  const cid = (await global.ipfs.dag.put(action)).toBaseEncodedString();
+  if(txType == 'computeTask'){
     global.nodeSimCache.computeTaskPeersMgr.addNewComputeTask(cid);
     await global.nodeSimCache.computeTaskPeersMgr.assignSpecialRoleToTask(cid, global.userInfo.userName);
   }
-
+  // if(secret_key){
+  //   cache.set(cid, secret_key);
+  //   console.log('uploadLambda => ', action, secret_key);
+  // }
+  
   global.broadcastEvent.emit('taskRoom', JSON.stringify({txType, cid}));
   o('status', `Tx ${txType} sent. -- ${cid}`)
   callbacks.rpcResponse({resMessage:{result:'ok'}});

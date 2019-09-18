@@ -1,10 +1,9 @@
 import o from './logWebUi';
 const Docker = require('../docker');
-const {crypto, cache} = require('../shared/utilities');
+const {crypto} = require('../shared/utilities');
 
 module.exports.executeCompute = (taskCid)=>{
-  //this is just a place holder, in the real system, we should launch docker and run the command to get the result.
-  //Now we just return hello world
+  
   const computeTaskBuffer = {};//We use this buffer to store the params data from task owner, and code from lambda owner. then run execute task
   
   const taskOwnerPeerId = global.nodeSimCache.computeTaskPeersMgr.getTaskOwnerPeer(taskCid);
@@ -14,10 +13,12 @@ module.exports.executeCompute = (taskCid)=>{
     //o('error', 'either task owner or lambda owner is not online. computing cannot start. abort');
    throw 'either task owner or lambda owner is not online. computing cannot start. abort' + JSON.stringify({ taskOwnerPeerId, lambdaOwnerPeerId});
   }
+
   const reqTaskParams = {
     type:'reqTaskParams',
     taskCid,
-    blockHeight:global.blockMgr.getLatestBlockHeight()
+    blockHeight:global.blockMgr.getLatestBlockHeight(),
+    public_key: crypto.getPublicKey()
   };  
 
   const reqLambdaParams = {
@@ -32,25 +33,28 @@ module.exports.executeCompute = (taskCid)=>{
       o('error', `I have got the task data from task owner but it is an error, ` +  err);
       return;
     }
-    o('log', 'receiving response from task owner for task params:' + res);
+    o('log', 'receiving response from task owner for task params:', res);
     o('status', 'I received data from task owner');
     const {data, taskCid} = res;
-    console.log('data, ', data);
-    console.log(`I have got the task data from task owner, `, data);
-    
-    computeTaskBuffer[taskCid] = computeTaskBuffer[taskCid] || {};
+    const {cid, secret_key} = data;
+    console.log(`I have got the task data from task owner, `, {cid, secret_key});
+    if(! computeTaskBuffer[taskCid])
+      computeTaskBuffer[taskCid] =  {};//{docker_yaml:(await global.ipfs.dag.get(taskCid)).value.docker_yaml};
     if(computeTaskBuffer[taskCid].data){
       throw `Error, executor has got the data already, why a new data come up again?`+  JSON.stringify({data, buffer: computeTaskBuffer});
       
     }
 
-    computeTaskBuffer[taskCid].data = data;
-    const result = await executeIfParamsAreReady(computeTaskBuffer, taskCid);
+    computeTaskBuffer[taskCid].data = {cid, secret_key};
+    const result = await executeIfParamsAreReady(computeTaskBuffer[taskCid]);
     if(result){
       o('status', 'I have completed the compute task. Result is:' + result + ' Waiting for verification from task owner and monitors')
+      delete computeTaskBuffer[taskCid];
       sendComputeResultBackToTaskOwner(taskCid, result);
       sendComputeExecutionDoneToMonitor(taskCid);
       sendComputeTaskExecutionDone(taskCid);
+    }else{
+      //o('error', `execute task in docker failed. result ${result}`);
     }
   };
 
@@ -70,27 +74,33 @@ module.exports.executeCompute = (taskCid)=>{
       o('error',  `I have got the task lambda from task owner but it is an error, ` +  err);
       return;
     }
-    o('log', 'receiving response from lambda owner for code:' + res);
+    o('log', 'receiving response from lambda owner for code:',res);
     o('status', 'I have received lambda owner code');
-    const {cid, taskCid} = res;
-    console.log('code, ', cid);
-    console.log(`I have got the lambda code from lambda owner, `, cid);
-    computeTaskBuffer[taskCid] = computeTaskBuffer[taskCid] || {};
+    const {code, taskCid, docker_yaml} = res;
+    const {cid, secret_key} = code;
+    console.log(`I have got the lambda code from lambda owner, `, {cid, secret_key});
+    if(! computeTaskBuffer[taskCid])
+      computeTaskBuffer[taskCid] =  {};
     
     if(computeTaskBuffer[taskCid].code){
       throw `Error, executor has got the code already, why a new code come up again?` +  JSON.stringify({code:cid, buffer: computeTaskBuffer});
       
     }
 
-    computeTaskBuffer[taskCid].code = cid;
-    //TODO
-    computeTaskBuffer[taskCid].data = res;
+    computeTaskBuffer[taskCid].code = {cid, secret_key};
+    computeTaskBuffer[taskCid].docker_yaml = docker_yaml;
+
     console.log('computeTaskBuffer', computeTaskBuffer);
-    const result = await executeIfParamsAreReady(computeTaskBuffer, taskCid);
+    const result = await executeIfParamsAreReady(computeTaskBuffer[taskCid]);
     if(result){
+      o('status', 'I have completed the compute task. Result is:' + result + ' Waiting for verification from task owner and monitors')
+      delete computeTaskBuffer[taskCid];
       sendComputeResultBackToTaskOwner(taskCid, result);
       sendComputeExecutionDoneToMonitor(taskCid);
       sendComputeTaskExecutionDone(taskCid);
+    }
+    else{
+      //o('error', `execute task in docker failed. result ${result}`);
     }
   };
 
@@ -103,13 +113,11 @@ module.exports.executeCompute = (taskCid)=>{
   console.log(`Sending request for lambda function code to lambda Owner PeerId:${lambdaOwnerPeerId}`, reqLambdaParams);
 }
 
-const executeIfParamsAreReady = async (computeTaskBuffer, taskCid)=>{
-  if(computeTaskBuffer[taskCid].data && computeTaskBuffer[taskCid].code){
+const executeIfParamsAreReady = async ({docker_yaml, code, data})=>{
+  if(data && code){
     o("status", 'I am executing the compute task now...');
-    computeTaskBuffer[taskCid].taskCid = taskCid;
-    console.log(`Executor has got both data and code, it can start execution`, computeTaskBuffer[taskCid])
-    const result = await executeComputeUsingEval(computeTaskBuffer[taskCid]);
-    delete computeTaskBuffer[taskCid];
+    console.log(`Executor has got both data and code, it can start execution`)
+    const result = await executeComputeUsingDocker({docker_yaml, code, data});
     console.log( `Execution result:`, result);
     return result;
   }
@@ -221,35 +229,29 @@ const sendComputeTaskExecutionDone = (taskCid)=>{
 // }
 // exports.chooseExecutorAndMonitors = chooseExecutorAndMonitors;
 
-const executeComputeUsingEval = async (param)=>{
-  const r = await getLambdaValueFromTaskCid(param.data);
-  if(r){
-    return r;
-  }
-  
-  throw 'execute error';
-  // return '';
-}
-module.exports.executeComputeUsingEval = executeComputeUsingEval;
-
-const getLambdaValueFromTaskCid = async (data)=>{
+const executeComputeUsingDocker = async ({docker_yaml, code, data})=>{
+  o('log', 'start execution. code, data', code, data);
   const source_data_encrypto = (await ipfs.dag.get(data.cid)).value;
   const key = crypto.privateDecrypt(data.secret_key, crypto.getPrivateKey());
-  const source_data = crypto.decrypt(source_data_encrypto, key);
+  const imageBase64 = crypto.decrypt(source_data_encrypto, key);
 
-  console.log(11, source_data.length);
-  if(data.dockerImg === 'test') return 'Hello World';
+  console.log(11, imageBase64.length);
+  const pycodeEnc = (await ipfs.dag.get(code.cid)).value;
+  const pyCodeKey = crypto.privateDecrypt(code.secret_key, crypto.getPrivateKey());
+  const pyCode = crypto.decrypt(pycodeEnc, pyCodeKey);
+  console.log(12, pyCode.length);
+  
+  
+  const rs = Docker.run({
+    imageBase64,
+    pyCode,
+    docker_yaml
+  });
 
-  if(data.dockerImg === 'image'){
-    const docker = new Docker();
-    const rs = docker.run({
-      type : 'image',
-      code : source_data
-    });
+  return rs;
+}
 
-    return rs;
-  }
-
-  return false;
+const getLambdaValueFromTaskCid = async (data)=>{
+  
 }
 

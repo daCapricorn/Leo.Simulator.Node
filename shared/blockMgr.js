@@ -15,10 +15,12 @@ module.exports = class BlockMgr{
   }
   pushNewBlock(height, cid){
     if(this._blockHistory[height]){
-      if(height == 0 && this.getLatestBlockHeight > 0){
-        this._resetBlockHistoryDebugOnly()
+      if(height == 0){
+        if(this._blockHistory && this._blockHistory[height] && this._blockHistory[height] != cid){
+          this._resetBlockHistoryDebugOnly();
+        }
       }
-      else if(this._blockHistory[height] != cid){
+      if(this._blockHistory[height] != cid){
         o('error', 'Find a new block with existing height but the cid is different. This should not happen', {height, cid});
         return;
       }else{

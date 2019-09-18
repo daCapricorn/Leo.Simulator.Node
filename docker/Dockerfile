@@ -10,5 +10,5 @@ RUN pip install opencv-python
 WORKDIR /LEO
 
 
-ADD ./python/run.py /LEO/run.py
+#ADD ./python/run.py /LEO/run.py
 
