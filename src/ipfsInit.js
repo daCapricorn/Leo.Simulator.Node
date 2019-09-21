@@ -27,7 +27,7 @@ exports.ipfsInit = async (swarmUrlOption)=>{
         ]
       }
     },
-    libp2p:libp2pConfig()
+    //libp2p:libp2pConfig()
   });
   console.log('IPFS node is ready');
   ipfs.on('error', error=>{
