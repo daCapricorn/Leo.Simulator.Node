@@ -1,4 +1,3 @@
-'use strict'
 
 //const WebRTCStar = require('libp2p-webrtc-star')
 const WebSockets = require('libp2p-websockets')
@@ -50,7 +49,5 @@ const createP2POptions = ()=>{
     //   },
     // },
   }
-
 }
-
 module.exports = createP2POptions;

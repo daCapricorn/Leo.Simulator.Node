@@ -137,7 +137,7 @@ const sendComputeResultBackToTaskOwner = (taskCid, result)=>{
     }
     if(res){
       o('debug', 'I am executor. I have completed the compute task. i got this result from task owner:', res);
-      o('status', 'I am executor, I received certificate from task owner');
+      o('status', 'I am executor,  I have completed the compute task and received confirmation from task owner');
     }
   };
   global.rpcEvent.emit('rpcRequest', {
