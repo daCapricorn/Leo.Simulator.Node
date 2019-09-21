@@ -5,7 +5,7 @@ import townHallHandler from './townHallHandler';
 import blockRoomHandler from './blockRoomHandler';
 import rpcResponse from './rpcResponse';
 import rpcDirectHandler from './rpcDirectHandler';
-
+import libp2pConfig from './libp2pConfig';
 exports.ipfsInit = async (swarmUrlOption)=>{
   console.log('swarmUrlOption:|', swarmUrlOption, '|');
   //const swarmUrl = swarmUrlOption == 'local'? '/ip4/127.0.0.1/tcp/9090/ws/p2p-websocket-star': swarmUrlOption;
@@ -26,7 +26,8 @@ exports.ipfsInit = async (swarmUrlOption)=>{
           swarmUrl
         ]
       }
-    }
+    },
+    libp2p:libp2pConfig()
   });
   console.log('IPFS node is ready');
   ipfs.on('error', error=>{
