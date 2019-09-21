@@ -58,7 +58,8 @@ module.exports = class BlockMgr{
         this._blockHistory[height].block = blockObj.value;
         if(this._timeoutSeconds > 0){
           _.delay((height)=>{
-            delete this._blockHistory[height].block;
+            if(this._blockHistory[height] && this._blockHistory[height].block)
+              delete this._blockHistory[height].block;
           }, this._timeoutSeconds, height)
         }
         return blockObj.value;
