@@ -162,15 +162,15 @@ exports.reqTaskParams= ({from, message, callbacks})=>{
           }
         })();
         //o('log', 'fileContentBase64', fileContentBase64);
-        const md5 = crypto.md5(fileContentBase64);
-        const fileEnc = crypto.encrypt(fileContentBase64, md5);
-        const secret_key = crypto.publicEncrypt(md5, public_key);
-        const fileEncCid = (await global.ipfs.dag.put(fileEnc)).toBaseEncodedString();
+        // const md5 = crypto.md5(fileContentBase64);
+        // const fileEnc = crypto.encrypt(fileContentBase64, md5);
+        // const secret_key = crypto.publicEncrypt(md5, public_key);
+        const fileCid = (await global.ipfs.dag.put(fileContentBase64)).toBaseEncodedString();
         const resMessage = {
           type:'resTaskParams',
           data:{
-            cid:fileEncCid,
-            secret_key
+            cid:fileCid,
+            // secret_key
           },
           taskCid, 
         };
@@ -213,20 +213,20 @@ exports.reqLambdaParams = ({from, message, callbacks})=>{
           }
         })();
         //o('log', 'fileContent', localSourceCode);
-        const md5 = crypto.md5(fileContent);
-        const fileEnc = crypto.encrypt(fileContent, md5);
-        const secret_key = crypto.publicEncrypt(md5, public_key);
-        const fileEncCid = (await global.ipfs.dag.put(fileEnc)).toBaseEncodedString();
+        // const md5 = crypto.md5(fileContent);
+        // const fileEnc = crypto.encrypt(fileContent, md5);
+        // const secret_key = crypto.publicEncrypt(md5, public_key);
+        const fileEncCid = (await global.ipfs.dag.put(fileContent)).toBaseEncodedString();
         const resMessage = {
           type:'resLambdaParams',
           code:{
             cid:fileEncCid,
-            secret_key
+            // secret_key
           },
           docker_yaml,
           taskCid, 
         };
-        callbacks.rpcResponse({resMessage})
+        callbacks.rpcResponse({resMessage});
         o('log', `Sending response for lambda code back to executor.`, resMessage);
         // const resMessage = {
         //   type:'resLambdaParams',

@@ -2,7 +2,6 @@ import {describe, it, before} from 'mocha';
 
 import { expect, should } from 'chai';
 
-import {fake_img} from './fake';
 import _ from 'lodash';
 import {crypto} from '../shared/utilities';
 

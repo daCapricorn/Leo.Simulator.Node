@@ -1,37 +1,37 @@
 import {describe, it, before} from 'mocha';
-
 import { expect, should } from 'chai';
 
 import {fake_img} from './fake';
 import _ from 'lodash';
-
+import fs from 'fs';
 
 import Docker from '../docker';
 describe('docker folder', ()=>{
-  // it('buildFuncString', ()=>{
-  //   const d = new Docker();
-  //   const rs = d.buildFuncString({
-  //     type : 'test',
-  //     code : 'a+b'
-  //   });
 
-  //   expect(rs).to.eql('a+b');
-  // });
+  const getPath = ()=>{
+    return __dirname+'/../demo-data';
+  }
 
-  // it('getPath', ()=>{
-  //   const d = new Docker();
-  //   const rs = d.getPath();
-  //   expect(_.includes(rs, process.cwd())).to.eql(true);
-  // })
+  it('run', ()=>{
+    const pyCode = fs.readFileSync(getPath()+'/run.py', 'utf8');
+    const rs = Docker.run({
+      type : 'image',
+      imageBase64 : fake_img,
+      pyCode,
+      docker_yaml : `
+      version: '3'
+      services:
+        computer-leo:
+          container_name: leo
+          image: kevingzhang/leo_python:demo201909
+          volumes:
+            - ./run.py:/LEO/run.py
+            - ./test.jpg:/LEO/test.jpg
+          command: python run.py
+      `
+    });
 
-  // it('run', ()=>{
-  //   const d = new Docker();
-  //   const rs = d.run({
-  //     type : 'image',
-  //     code : fake_img
-  //   });
-
-  //   expect(rs).not.to.eql(true);
-  // });
+    expect(rs).not.to.eql(true);
+  });
 });
 
