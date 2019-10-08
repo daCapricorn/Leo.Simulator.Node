@@ -231,15 +231,15 @@ const sendComputeTaskExecutionDone = (taskCid)=>{
 
 const executeComputeUsingDocker = async ({docker_yaml, code, data})=>{
   o('log', 'start execution. code, data', code, data);
-  const source_data_encrypto = (await ipfs.dag.get(data.cid)).value;
-  const key = crypto.privateDecrypt(data.secret_key, crypto.getPrivateKey());
-  const imageBase64 = crypto.decrypt(source_data_encrypto, key);
+  const imageBase64 = (await ipfs.dag.get(data.cid)).value;
+  // const key = crypto.privateDecrypt(data.secret_key, crypto.getPrivateKey());
+  // const imageBase64 = crypto.decrypt(source_data_encrypto, key);
 
   console.log(11, imageBase64.length);
-  const pycodeEnc = (await ipfs.dag.get(code.cid)).value;
-  const pyCodeKey = crypto.privateDecrypt(code.secret_key, crypto.getPrivateKey());
-  const pyCode = crypto.decrypt(pycodeEnc, pyCodeKey);
-  console.log(12, pyCode.length);
+  const pyCode = (await ipfs.dag.get(code.cid)).value;
+  // const pyCodeKey = crypto.privateDecrypt(code.secret_key, crypto.getPrivateKey());
+  // const pyCode = crypto.decrypt(pycodeEnc, pyCodeKey);
+  console.log(12, pyCode);
   
   
   const rs = Docker.run({

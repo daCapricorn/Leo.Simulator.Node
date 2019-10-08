@@ -89,4 +89,5 @@ ipfs-storate-no-git
 ./web/js
 
 docker/*.jpg
-demo-data
+docker/run.py
+demo-data/*.jpg
