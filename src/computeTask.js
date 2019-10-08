@@ -161,7 +161,7 @@ const sendComputeExecutionDoneToMonitor = (taskCid)=>{
       o('error', 'reqComputeCompleted get error response from remote attestator. err:', err);
     }
     if(res){
-      o('debug', 'I am executor. I have completed the compute task. i got this result from my remote attestator:', res);
+      //o('debug', 'I am executor. I have completed the compute task. i got this result from my remote attestator:', res);
       o('status', 'I am executor, I received certificate from monitor');
     }
   };
