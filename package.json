@@ -39,13 +39,10 @@
     "peer-id": "^0.13.2",
     "underscore": "^1.9.1",
     "vrf.js": "0.0.4",
-    "yargs": "^12.0.1"
-  },
-  "devDependencies": {
+    "yargs": "^12.0.1",
     "@babel/cli": "^7.5.5",
     "@babel/core": "^7.5.5",
     "@babel/plugin-transform-runtime": "^7.5.5",
-    "@babel/preset-env": "^7.5.5",
     "babel-jest": "^24.9.0",
     "babel-polyfill": "^6.26.0",
     "babelify": "^10.0.0",
