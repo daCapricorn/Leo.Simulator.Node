@@ -50,6 +50,11 @@
     "chai-as-promised": "^7.1.1",
     "mocha": "^6.2.0",
     "nodemon": "^1.19.2",
-    "reify": "^0.20.12"
+    "reify": "^0.20.12",
+    "@grpc/proto-loader": "^0.1.0",
+    "google-protobuf": "^3.0.0",
+    "grpc": "^1.11.0",
+    "lodash": "^4.6.1",
+    "minimist": "^1.2.0"
   }
 }
